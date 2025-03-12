@@ -1,0 +1,7 @@
+runs/*
+server_code/dataset
+__pycache__/
+dataset/images/*
+dataset/labels/*
+dataset/VOCdevkit/*
+code_test.py
