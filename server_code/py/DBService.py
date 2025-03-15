@@ -232,7 +232,7 @@ class DBService:
         connection = DBService.get_connection()
         cursor = connection.cursor()
         try:
-            cursor.execute(f"SELECT * FROM pcb_images WHERE User_id = '{user_id}' AND Image_state != '未检测'")
+            cursor.execute(f"SELECT * FROM pcb_images WHERE User_id = '{user_id}' AND Image_state != '未检测' AND Image_state != '已删除'")
             records = cursor.fetchall()
         except Error as e:
             print(f"The error '{e}' occurred")
@@ -309,7 +309,7 @@ class DBService:
             return False
         return True
     @staticmethod
-    def get_daily_detected_data():
+    def get_daily_detection_data():
         """
         获取每日检测数据。
 
@@ -326,7 +326,7 @@ class DBService:
             return False
         return records
     @staticmethod
-    def get_pre_day_detected_data():
+    def get_pre_day_detection_data():
         """
         获取前一天检测数据。
 
@@ -342,6 +342,58 @@ class DBService:
             print(f"The error '{e}' occurred")
             return False
         return records
+    # 删除图片
+    @staticmethod
+    def delete_pcb(pcb_id):
+        """
+        置指定的PCB为删除状态。
+
+        :return: 删除结果
+        """
+        connection = DBService.get_connection()
+        cursor = connection.cursor()
+        try:
+            cursor.execute(f"UPDATE pcb_images SET Image_state = '已删除' WHERE PCB_Id = '{pcb_id}'")
+            records = cursor.fetchall()
+        except Error as e:
+            print(f"The error '{e}' occurred")
+            return False
+        return records
+    @staticmethod
+    def get_total_detection_data():
+        """
+        获取总检测数据。
+
+        :return: 总检测数据
+        :rtype: list
+        """
+        connection = DBService.get_connection()
+        cursor = connection.cursor()
+        try:
+            cursor.execute(f"SELECT COUNT(*) FROM pcb_images WHERE Image_state != '未检测'")
+            records = cursor.fetchall()
+        except Error as e:
+            print(f"The error '{e}' occurred")
+            return False
+        return records
+    @staticmethod
+    def get_total_detected_data():
+        """
+        获取总缺陷数据。
+
+        :return: 总缺陷数据
+        :rtype: list
+        """
+        connection = DBService.get_connection()
+        cursor = connection.cursor()
+        try:
+            cursor.execute(f"SELECT COUNT(*) FROM pcb_defect")
+            records = cursor.fetchall()
+        except Error as e:
+            print(f"The error '{e}' occurred")
+            return False
+        return records
+    
 if __name__ == "__main__":
     # Example usage
     db = DBService()

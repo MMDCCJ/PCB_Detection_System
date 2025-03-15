@@ -44,11 +44,18 @@ cookie = SessionCookie(
 # 每五分钟执行一次
 async def flush_daily_detecte_num_every_five_minutes():
     while True:
-        data = DB.get_daily_detected_data()
-        pre_data = DB.get_pre_day_detected_data()
-        redis_client.set('daily_detected_data', data[0][0])
-        redis_client.set('pre_daily_detected_data', pre_data[0][0])
-        await asyncio.sleep(300)  # Sleep for 300 seconds (5 minutes)
+        data = DB.get_daily_detection_data()
+        pre_data = DB.get_pre_day_detection_data()
+        redis_client.set('daily_detection_data', data[0][0])
+        redis_client.set('pre_daily_detection_data', pre_data[0][0])
+        await asyncio.sleep(300)  # 五分钟执行一次
+async def flush_total_data():
+    while True:
+        data = DB.get_total_detection_data()
+        detected_data = DB.get_total_detected_data()
+        redis_client.set('total_detection_data', data[0][0])
+        redis_client.set('total_detected_data', detected_data[0][0])
+        await asyncio.sleep(3600)  # 一小时执行一次
 def init():
     # 目录创建
     temp_path = config.Config.temp_Image_path
@@ -59,6 +66,7 @@ def init():
     os.makedirs(detected_image_path, exist_ok=True)
     # 主页数据定时器
     asyncio.create_task(flush_daily_detecte_num_every_five_minutes())
+    asyncio.create_task(flush_total_data())
     print("初始化完成")
 init()
 # 加载模型
@@ -336,7 +344,7 @@ async def session_middleware(request: Request, call_next):
         response = await call_next(request)
         return response
     print(request.url.path,"经过中间件")
-    if request.method.lower() == "options" and request.url.path in ["/api/upload"] :
+    if request.method.lower() == "options":
         response = await call_next(request)
         return response
     session_id = request.cookies.get("session")
@@ -354,7 +362,7 @@ async def session_middleware(request: Request, call_next):
     response = await call_next(request)
     return response
 # 挂载静态文件目录
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="./server_code/static"), name="static")
 app.mount("/images/detected",StaticFiles(directory="server_code/dataset/images/detected"), name="images")
 app.mount("/images/origins",StaticFiles(directory="server_code/dataset/images/origins"), name="origins")
 # 首页
@@ -405,9 +413,12 @@ async def login(user:User):
 @app.get("/api/check_login")
 async def check_login(request: Request):
     session_data = redis_client.get(f"session:{request.cookies.get('session')}")
-    print("session-data:",session_data)
+    if not session_data:
+        return Message("未登录", 400).pack()
+    session_data = ast.literal_eval(session_data.decode())
+    user_name = session_data['username']
     if session_data:
-        return Message("已登录", 200).pack()
+        return Message("已登录", 200,{'user_name':user_name}).pack()
     else:
         return Message("未登录", 400).pack()
 # 上传图片
@@ -445,6 +456,7 @@ async def predict(request: Request):
         print(image)
         detect_single(img_src=config.Config.temp_Image_path+"/"+image[2],save_img=True,PCB_Id=image[0])
     return Message("预测完成",200).pack()
+# 获取已检测图片列表
 @app.get("/api/get_pcb_list")
 async def get_result_list(request: Request):
     session_id = request.cookies.get("session")
@@ -463,11 +475,23 @@ async def get_result_list(request: Request):
         pcb = PCB(id=pcb_id,srcName=src_name,position=defect,date=date)
         PCB_Info_list.append(pcb)
     return Message("获取成功",200,PCB_Info_list).pack()
-@app.get("/api/detected_data")
+# 获取系统预测信息
+@app.get("/api/get_system_info")
 async def get_daily_detected_data(request: Request):
-    data = redis_client.get('daily_detected_data')
-    pre_data = redis_client.get('pre_daily_detected_data')
-    return Message("获取成功",200,{"today":data,"pre_day":pre_data}).pack()
+    data = redis_client.get('daily_detection_data')
+    pre_data = redis_client.get('pre_daily_detection_data')
+    total_data = redis_client.get('total_detection_data')
+    total_detected_data = redis_client.get('total_detected_data')
+    return Message("获取成功",200,{"today":data,"pre_day":pre_data,"total_detection_data":total_data,"total_detected_data":total_detected_data}).pack()
+# 将数据库中的图片信息设置为删除
+@app.post("/api/delete_pcb")
+async def delete_pcb(request: Request):
+    data = await request.json()
+    pcb_id = data.get("pcb_id")
+    res = DB.delete_pcb(pcb_id)
+    print(res)
+    return Message("删除成功",200).pack()
+
 # 空白路由
 # Catch-all 路由来处理所有未匹配的 URL 请求，并返回 index.html 页面
 @app.get("/{full_path:path}", response_class=HTMLResponse)
