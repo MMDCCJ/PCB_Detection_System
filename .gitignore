@@ -5,3 +5,4 @@ dataset/images/*
 dataset/labels/*
 dataset/VOCdevkit/*
 code_test.py
+*.pt
