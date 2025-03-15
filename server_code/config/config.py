@@ -9,3 +9,10 @@ class Config:
     temp_Image_path = f"{Image_path}\\temp"
     origin_Image_path = f"{Image_path}\origins"
     Text_path = f"{project_path}\dataset\labels"
+    model_path = "runs/train/yolo-tiny-pcb-500/weights/best.pt"
+    Coockie = {
+        "cookie_name": "session",
+        "identifier": "general_verifier",
+        "auto_error": True,
+        "secret_key": "MMDCCJBYSJFWD",  # 毕业设计服务端
+    }
