@@ -355,6 +355,7 @@ class DBService:
         try:
             cursor.execute(f"UPDATE pcb_images SET Image_state = '已删除' WHERE PCB_Id = '{pcb_id}'")
             records = cursor.fetchall()
+            connection.commit()
         except Error as e:
             print(f"The error '{e}' occurred")
             return False

@@ -1,58 +1,66 @@
 CREATE DATABASE IF NOT EXISTS PCB_Detection_DB;
+
 USE PCB_Detection_DB;
-DROP USER
-IF
-	EXISTS 'PCB' @'localhost';
-CREATE USER
-IF
-	NOT EXISTS 'PCB' @'localhost' IDENTIFIED BY '020522';
-GRANT SELECT
-	,
-	INSERT,
-	UPDATE,
+
+DROP USER IF EXISTS 'PCB' @'localhost';
+
+CREATE USER IF NOT EXISTS 'PCB' @'localhost' IDENTIFIED BY '020522';
+
+GRANT
+SELECT
+,
+INSERT
+,
+UPDATE
+,
 	ALTER,
-	DROP, DELETE ON PCB_Detection_DB.* TO 'PCB' @'localhost';
+	DROP,
+	DELETE ON PCB_Detection_DB.* TO 'PCB' @'localhost';
+
 FLUSH PRIVILEGES;
+
 USE PCB_Detection_DB;
-DROP TABLE
-IF
-	EXISTS PCB_user;-- 用户表
-CREATE TABLE
-IF
-	NOT EXISTS PCB_User (
-		id INT AUTO_INCREMENT PRIMARY KEY,
-		Username VARCHAR ( 50 ) NOT NULL,
-		PASSWORD VARCHAR ( 50 ) NOT NULL,
-		User_Type ENUM ( 'admin', 'user' ) NOT NULL 
-	) COMMENT = '用户信息表';
-DROP TABLE
-IF
-	EXISTS PCB_Images;-- PCB图片表
-CREATE TABLE
-IF
-	NOT EXISTS PCB_Images (
-		PCB_Id INT AUTO_INCREMENT PRIMARY KEY,
-		User_Id INT NOT NULL,
-		Image_name VARCHAR ( 255 ) NOT NULL,
-		Upload_Date DATETIME NOT NULL,
-		Detect_Date DATETIME NOT NULL,
-		Image_state ENUM ( '未检测', '存在缺陷', '检测通过', '已删除' ) NOT NULL,
-		CONSTRAINT fk_UserId FOREIGN KEY ( User_Id ) REFERENCES PCB_User ( id ) 
-	) COMMENT = 'PCB图像上传记录表';
-DROP TABLE
-IF
-	EXISTS PCB_Defect;-- PCB缺陷表
-CREATE TABLE
-IF
-	NOT EXISTS PCB_Defect (
-		ID INT AUTO_INCREMENT PRIMARY KEY,
-		PCB_ID INT NOT NULL,
-		position VARCHAR ( 255 ),
-		CONSTRAINT fk_PCBID FOREIGN KEY ( PCB_ID ) REFERENCES PCB_Images ( PCB_Id ) 
-	) COMMENT = 'PCB缺陷表';
-INSERT INTO PCB_User ( Username, PASSWORD, User_Type )
+
+DROP TABLE IF EXISTS PCB_user;
+
+-- 用户表
+CREATE TABLE IF NOT EXISTS PCB_User (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	Username VARCHAR (50) NOT NULL,
+	PASSWORD VARCHAR (50) NOT NULL,
+	User_Type ENUM ('admin', 'user') NOT NULL,
+	User_Avatar VARCHAR(50),
+) COMMENT = '用户信息表';
+
+DROP TABLE IF EXISTS PCB_Images;
+
+-- PCB图片表
+CREATE TABLE IF NOT EXISTS PCB_Images (
+	PCB_Id INT AUTO_INCREMENT PRIMARY KEY,
+	User_Id INT NOT NULL,
+	Image_name VARCHAR (255) NOT NULL,
+	Upload_Date DATETIME NOT NULL,
+	Detect_Date DATETIME NOT NULL,
+	Image_state ENUM ('未检测', '存在缺陷', '检测通过', '已删除') NOT NULL,
+	CONSTRAINT fk_UserId FOREIGN KEY (User_Id) REFERENCES PCB_User (id)
+) COMMENT = 'PCB图像上传记录表';
+
+DROP TABLE IF EXISTS PCB_Defect;
+
+-- PCB缺陷表
+CREATE TABLE IF NOT EXISTS PCB_Defect (
+	ID INT AUTO_INCREMENT PRIMARY KEY,
+	PCB_ID INT NOT NULL,
+	position VARCHAR (255),
+	CONSTRAINT fk_PCBID FOREIGN KEY (PCB_ID) REFERENCES PCB_Images (PCB_Id)
+) COMMENT = 'PCB缺陷表';
+
+INSERT INTO
+	PCB_User (Username, PASSWORD, User_Type)
 VALUES
-	( 'Test', '123456', 'user' );
-INSERT INTO PCB_User ( Username, PASSWORD, User_Type )
+	('Test', '123456', 'user');
+
+INSERT INTO
+	PCB_User (Username, PASSWORD, User_Type)
 VALUES
-	( 'MMDCCJ', '020522', 'admin' );
+	('MMDCCJ', '020522', 'admin');
