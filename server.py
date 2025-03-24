@@ -87,7 +87,7 @@ if need_load:
     # 推理预热
     if device.type != 'cpu':
         model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # 预热模型
-def detect_single(img_src='dataset/images/test',user_id=0,save_img=True,PCB_Id=0):
+def detect_single(img_src='dataset/images/test',save_img=True,colors=None):
     # 数据源设置
     source = img_src  # 输入源（可以是图片路径、视频路径、摄像头等）
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
@@ -108,7 +108,10 @@ def detect_single(img_src='dataset/images/test',user_id=0,save_img=True,PCB_Id=0
         dataset = LoadImages(source, img_size=imgsz, stride=stride)  # 加载静态图像数据
     # 获取类别名和颜色
     names = model.module.names if hasattr(model, 'module') else model.names  # 类别名称
-    colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]  # 每个类别分配随机颜色
+    if colors == None:
+        colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]  # 每个类别分配随机颜色
+#     names are ['missing_hole', 'mouse_bite', 'open_circuit', 'short', 'spurious_copper', 'spur']
+#     colors are [[121, 184, 18], [179, 242, 129], [154, 169, 164], [130, 169, 194], [52, 212, 175], [241, 226, 148]]
     # 初始化变量
     old_img_w = old_img_h = imgsz
     old_img_b = 1
@@ -144,9 +147,9 @@ def detect_single(img_src='dataset/images/test',user_id=0,save_img=True,PCB_Id=0
             p = Path(p)  # 转换为 Path 对象
             save_path = str(save_dir / p.name)  # 保存路径
             txt_path = str(config.Config.Text_path +"/"+ p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # 标签路径
-            print("txt_path is", txt_path)
-            print("save_path is", save_path)
-            print("img_path",path)
+            # print("txt_path is", txt_path)
+            # print("save_path is", save_path)
+            # print("img_path",path)
             # 检测结果处理
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # 归一化坐标比例
             if len(det):
@@ -163,8 +166,8 @@ def detect_single(img_src='dataset/images/test',user_id=0,save_img=True,PCB_Id=0
                     line = (cls, *xywh, conf)  # 保存格式
                     with open(txt_path + '.txt', 'a') as f:
                         f.write(('%g ' * len(line)).rstrip() % line + '\n')
-                    print("缺陷位置：" + ('%g ' * len(line)).rstrip() % line)
-                    print('文件名：',p.name)
+                    # print("缺陷位置：" + ('%g ' * len(line)).rstrip() % line)
+                    # print('文件名：',p.name)
                     pcb_id = DB.get_pcbId_by_name(p.name)
                     if pcb_id:
                         DB.save_defect(pcb_id,('%g ' * len(line)).rstrip() % line)
@@ -331,7 +334,7 @@ async def predict(request: Request):
         return Message("无待预测图片",400).pack()
     for image in unpredict_images_list:
         print(image)
-        detect_single(img_src=config.Config.temp_Image_path+"/"+image[2],save_img=True,PCB_Id=image[0])
+        detect_single(img_src=config.Config.temp_Image_path+"/"+image[2],save_img=True)
     return Message("预测完成",200).pack()
 # 获取已检测图片列表
 @app.get("/api/get_pcb_list")
