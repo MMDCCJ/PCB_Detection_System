@@ -18,15 +18,16 @@
     model_path = "runs/train/yolo-tiny-pcb-500/weights/best.pt" # 所选择模型
 ```
 ## 运行
-Step 0 配置相关环境，下载或自行训练服务运行所需的权重
-    这是一个简单的模型权重 https://pan.baidu.com/s/10jxO3mjFEfo5xHNd3IvPAw?pwd=veme 放在项目下weights并修改`Server_code/Config.py`文件下的`model_path`参数，`model_path`参数为服务器调用模型的相对位置
-Step 1 启动Redis服务
+### Step 0 配置相关环境
+下载或自行训练服务运行所需的权重
+\这是一个简单的模型权重 https://pan.baidu.com/s/10jxO3mjFEfo5xHNd3IvPAw?pwd=veme 放在项目下weights并修改`Server_code/Config.py`文件下的`model_path`参数，`model_path`参数为服务器调用模型的相对位置
+### Step 1 启动Redis服务
 
-step 2 启动Python服务器
+### step 2 启动Python服务器
 ```python
 uvicorn server:app --reload"
 ```
-step 3 启动Vue服务(开发模式)
+### step 3 启动Vue服务(开发模式)
 ```shell
 npm run dev
 ```
