@@ -1,14 +1,15 @@
-#PCB缺陷检测系统
+# PCB缺陷检测系统
 基于YOLOv7优化的YOLOv7_PCB模型
-##设置与初始化
+## 设置与初始化
 修改`Server_code/Config.py`文件，初始化`SQL`请运行`Server_code/sql/start.sql`
-###参数详情
+### 参数详情
 ```python
+
     Mysql_host = "localhost" # 数据库Host
     Mysql_username = "PCB" # 用户名
     Mysql_password = "020522" # 密码
     Mysql_db = "PCB_Detection_DB" # 所选数据库名
-    project_path = "E:\code\Graduation_project\module\yolov7_PCB_Server\server_code" # 项目server_code位置
+    project_path = "E:\code\Graduation_project\module\yolov7_PCB_Server\server_code" # 项目下server_code位置
     Image_path = f"{project_path}\dataset\images" # 图片存储位置
     Image_detect_path = f"{Image_path}\detected" # 预测图片存储位置
     temp_Image_path = f"{Image_path}\\temp" # 临时图片存储位置
@@ -16,7 +17,9 @@
     Text_path = f"{project_path}\dataset\labels" # 标签位置
     model_path = "runs/train/yolo-tiny-pcb-500/weights/best.pt" # 所选择模型
 ```
-##运行
+## 运行
+Step 0 配置相关环境，下载或自行训练服务运行所需的权重
+    这是一个简单的模型权重 https://pan.baidu.com/s/10jxO3mjFEfo5xHNd3IvPAw?pwd=veme 放在项目下weights并修改`Server_code/Config.py`文件下的`model_path`参数，`model_path`参数为服务器调用模型的相对位置
 Step 1 启动Redis服务
 
 step 2 启动Python服务器
