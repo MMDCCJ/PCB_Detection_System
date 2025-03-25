@@ -394,7 +394,29 @@ class DBService:
             print(f"The error '{e}' occurred")
             return False
         return records
-    
+    @staticmethod
+    def get_user_settings(user_id):
+        connection = DBService.get_connection()
+        cursor = connection.cursor()
+        try:
+            cursor.execute(f"SELECT Color_settings FROM pcb_user WHERE id={user_id}")
+            records = cursor.fetchall()
+        except Error as e:
+            print(f"The error '{e}' occurred")
+            return False
+        return records
+    @staticmethod
+    def update_color_settings(user_id,color_settings):
+        connection = DBService.get_connection()
+        cursor = connection.cursor()
+        try:
+            cursor.execute(f"UPDATE pcb_user SET Color_Settings='{color_settings}' WHERE id='{user_id}'")
+            records = cursor.fetchall()
+            connection.commit()
+        except Error as e:
+            print(f"The error '{e}' occurred")
+            return False
+        return records
 if __name__ == "__main__":
     # Example usage
     db = DBService()

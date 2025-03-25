@@ -322,19 +322,36 @@ async def upload(request: Request):
     return Message("上传成功",200).pack()
 
 # 预测
-@app.get("/api/predict")
+@app.post("/api/predict")
 async def predict(request: Request):
     session_id = request.cookies.get("session") # 获取session_id
     session_data = redis_client.get(f"session:{session_id}")
     session_data = ast.literal_eval(session_data.decode())
     user_name = session_data['username']
     user_id = DB.get_user_id(user_name)
+    data = await request.json()
+    color_settings:str = data.get('color_settings') 
+    # 颜色数组生成
+    origin_list = color_settings.split(" ")
+    color_list = []
+    temp_color_list = []
+    for i in origin_list:
+        temp_color_list.append(int(i))
+        if temp_color_list.__len__()==3:
+            color_list.append(temp_color_list)
+            temp_color_list = []
+    colors = []
+    # 调整rgb顺序
+    for i in color_list:
+        temp = i[0]
+        i[0] = i[2]
+        i[2] = temp
+        colors.append(i)
     unpredict_images_list = DB.get_unpredicted_image_list(user_id)
     if not unpredict_images_list:
         return Message("无待预测图片",400).pack()
     for image in unpredict_images_list:
-        print(image)
-        detect_single(img_src=config.Config.temp_Image_path+"/"+image[2],save_img=True)
+        detect_single(img_src=config.Config.temp_Image_path+"/"+image[2],save_img=True,colors=colors)
     return Message("预测完成",200).pack()
 # 获取已检测图片列表
 @app.get("/api/get_pcb_list")
@@ -369,9 +386,30 @@ async def delete_pcb(request: Request):
     data = await request.json()
     pcb_id = data.get("pcb_id")
     res = DB.delete_pcb(pcb_id)
-    print(res)
     return Message("删除成功",200).pack()
-
+@app.get('/api/get_color_settings')
+async def get_color_settings(request: Request):
+    session_id = request.cookies.get("session")
+    session_data = redis_client.get(f"session:{session_id}")
+    session_data = ast.literal_eval(session_data.decode())
+    user_name = session_data['username']
+    user_Id = DB.get_user_id(user_name)
+    res = DB.get_user_settings(user_Id)
+    return Message("获取成功",200,res).pack()
+@app.post("/api/save_color_settings")
+async def save_color_settings(request: Request):
+    data = await request.json()
+    session_id = request.cookies.get("session")
+    session_data = redis_client.get(f"session:{session_id}")
+    session_data = ast.literal_eval(session_data.decode())
+    user_name = session_data['username']
+    user_Id = DB.get_user_id(user_name)
+    color_settings = data.get("color_settings")
+    res = DB.update_color_settings(user_Id,color_settings)
+    if res!=False:
+        return Message("保存成功",200).pack()
+    else:
+        return Message("保存失败",400).pack()
 # 空白路由
 # Catch-all 路由来处理所有未匹配的 URL 请求，并返回 index.html 页面
 @app.get("/{full_path:path}", response_class=HTMLResponse)
